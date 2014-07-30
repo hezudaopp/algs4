@@ -19,9 +19,6 @@
 
 Initializing functions and beginning installation...
 
-Creating installation directory at
-/Users/jawinton/algs4
-
 #### Step 1 - Java #################################################
 
 Java is already installed.
@@ -41,12 +38,6 @@ to
 
 Granting executable permission to
 /usr/local/bin/javac-algs4
-
-Creating Java library directory at
-/Users/jawinton/Library/Java
-
-Creating Java extensions directory at
-/Users/jawinton/Library/Java/Extensions
 
 #### Step 2 - Textbook Libraries ##################################
 
