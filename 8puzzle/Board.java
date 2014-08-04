@@ -30,9 +30,7 @@ public class Board {
 			for (int j = 0; j < N; j++) {
 				if (mBlocks[i][j] == 0) continue;
 				int value = i * N + j + 1;
-				value = (i == N-1 && j == N-1)
-						? 0
-						: value;
+				if (i == N-1 && j == N-1) value = 0;
 				if (mBlocks[i][j] != value) count++;
 			}
 		}
@@ -45,12 +43,10 @@ public class Board {
     	int sum = 0;
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
+				if (mBlocks[i][j] == 0) continue;
 				int di = (mBlocks[i][j] - 1) / N;
-				di = (mBlocks[i][j] == 0)
-					 ? N - 1
-					 : di;
 				int dj = (mBlocks[i][j] + N - 1) % N;
-				int manhattanDistance = abs(di - i) + abs(dj - j);
+				int manhattanDistance = Math.abs(di - i) + Math.abs(dj - j);
 				sum += manhattanDistance;
 			}
 		}
@@ -93,6 +89,8 @@ public class Board {
     	}
     	return false;
     }
+    
+    
     
     // all neighboring boards
     public Iterable<Board> neighbors() {
@@ -139,12 +137,6 @@ public class Board {
 			sb.append("\n");
     	}
     	return sb.toString();
-    }
-    
-    private int abs(int v) {
-    	return v > 0
-    		   ? v 
-    		   : -v;
     }
     
     private void swap(int[][] blocks, int i, int j, int ii, int jj) {

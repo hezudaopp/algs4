@@ -5,24 +5,61 @@ import java.util.List;
 public class Solver {
 	private MinPQ<GameTree> pq = new MinPQ<GameTree>(new BoardComparator());
 	private MinPQ<GameTree> twinPQ = new MinPQ<GameTree>(new BoardComparator());
-	private GameTree previousGameTree = null;
-	private GameTree previousTwinGameTree = null;
-	private Board twinBoard;
 	private int moves;
-	private Iterable<Board> it;
+	private boolean solvable;
+	private GameTree goal;
 	
 	
 	// find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
-    	twinBoard = initial.twin();
+    	Board twinBoard = initial.twin();
     	pq.insert(new GameTree(initial, 0, null));
     	twinPQ.insert(new GameTree(twinBoard, 0, null));
-    	it = solution();
+    	this.solvable = solve();
+    }
+    
+    private boolean solve() {
+    	while (true) {
+    		GameTree current = pq.delMin();
+    		
+    		if (current.board.isGoal()) {
+    			this.goal = current;
+    			this.moves = this.goal.deep;
+    			this.solvable = true;
+    			return true;
+    		}
+    		
+    		for (Board neighbor : current.board.neighbors()) {
+    			GameTree gameTree = new GameTree(neighbor, current.deep + 1, current);
+    			if (gameTree.equals(current.parentTree)) {
+    				continue;
+    			}
+    			pq.insert(gameTree);
+    		}
+    		
+    		
+    		GameTree twinCurrent = twinPQ.delMin();
+    		
+    		if (twinCurrent.board.isGoal()) {
+    			this.goal = null;
+    			this.moves = -1;
+    			this.solvable = false;
+    			return false;
+    		}
+    		
+    		for (Board neighbor : twinCurrent.board.neighbors()) {
+    			GameTree gameTree = new GameTree(neighbor, twinCurrent.deep + 1, twinCurrent);
+    			if (gameTree.equals(twinCurrent.parentTree)) {
+    				continue;
+    			}
+    			twinPQ.insert(gameTree);
+    		}
+    	}
     }
     
     // is the initial board solvable?
     public boolean isSolvable() {
-    	return this.moves != -1;
+    	return this.solvable;
     }
     
     // min number of moves to solve initial board; -1 if no solution
@@ -32,36 +69,14 @@ public class Solver {
     
     // sequence of boards in a shortest solution; null if no solution
     public Iterable<Board> solution() {
-    	if (it != null) return it;
-    	while (!pq.isEmpty() && !twinPQ.isEmpty()) {
-    		GameTree currentGameTree = pq.delMin();
-    		GameTree currentTwinGameTree = twinPQ.delMin();
-    		if (currentGameTree.board.isGoal()) {
-    			List<Board> list = new LinkedList<Board>();
-    			while (currentGameTree != null) {
-    				list.add(0, currentGameTree.board);
-    				currentGameTree = currentGameTree.parentTree;
-    			}
-    			this.moves = list.size()-1;
-    			return list;
-    		}
-    		if (currentGameTree.board.isGoal()) {
-    			this.moves = -1;
-    			return null;
-    		}
-    		for (Board neighbor : currentGameTree.board.neighbors()) {
-    			if (previousGameTree != null && neighbor.equals(previousGameTree.board)) continue;
-    			pq.insert(new GameTree(neighbor, currentGameTree.deep + 1, currentGameTree));
-    		}
-    		for (Board neighbor : currentTwinGameTree.board.neighbors()) {
-    			if (previousTwinGameTree != null && neighbor.equals(previousTwinGameTree.board)) continue;
-    			twinPQ.insert(new GameTree(neighbor, currentTwinGameTree.deep + 1, currentTwinGameTree));
-    		}
-    		previousGameTree = currentGameTree;
-    		previousTwinGameTree = currentTwinGameTree;
-    	}
-    	this.moves = -1;
-    	return null;
+    	if (this.goal == null) return null;
+    	List<Board> list = new LinkedList<Board>();
+    	GameTree node = this.goal;
+    	while (node != null) {
+			list.add(0, node.board);
+			node = node.parentTree;
+		}
+    	return list;
     }
     
     // solve a slider puzzle (given below)
@@ -89,14 +104,31 @@ public class Solver {
     }
     
     private class GameTree {
-    	public Board board;
-    	public int deep;
-    	public GameTree parentTree;
+    	private Board board;
+    	private int deep;
+    	private GameTree parentTree;
+    	private int hash = 0;
     	
     	public GameTree(Board b, int d, GameTree p) {
     		this.board = b;
     		this.deep = d;
     		this.parentTree = p;
+    	}
+    	
+    	public boolean equals(Object that) {
+            if (that == this) return true;
+            if (that == null) return false;
+            if (that.getClass() != this.getClass()) return false;
+            
+            GameTree tmp = (GameTree) that;
+            if (tmp.board.equals(board)) return true;
+            return false;
+        }
+
+    	public int hashCode() {
+    		if (this.hash != 0) return this.hash;
+    		this.hash = board.toString().hashCode();
+    		return hash;
     	}
     }
     
